@@ -2,6 +2,7 @@ package com.zegelin.joyent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class CreateMachineRequest {
     public static class Locality {
@@ -97,7 +99,8 @@ public class CreateMachineRequest {
 //    @JsonUnwrapped(prefix = "metadata")
     public final Map<String, String> metadata;
 
-//    @JsonUnwrapped(prefix = "tags")
+    @JsonUnwrapped
+    @JsonProperty
     public final Map<String, String> tags;
 
     @JsonProperty
@@ -107,10 +110,10 @@ public class CreateMachineRequest {
         this.name = builder.name;
         this.pkg = builder.pkg;
         this.image = builder.image;
-        this.networks = ImmutableList.of();
+        this.networks = builder.networks.build();
         this.locality = builder.locality;
         this.metadata = ImmutableMap.of("test", "foo-bar");
-        this.tags = ImmutableMap.of("some-tag", "some-value");
+        this.tags = builder.tags.build();
         this.firewallEnabled = false;
     }
 
@@ -119,6 +122,7 @@ public class CreateMachineRequest {
 
         public final IdOrName<Package> pkg;
         public final IdOrName<Image> image;
+        public ImmutableList.Builder<Id<Network>> networks = ImmutableList.builder();
 
         public final ImmutableMap.Builder<String, String> metadata = ImmutableMap.builder();
         public final ImmutableMap.Builder<String, String> tags = ImmutableMap.builder();
@@ -148,6 +152,16 @@ public class CreateMachineRequest {
 
         public Builder withMetadata(final Map<String, String> metadata) {
             this.metadata.putAll(metadata);
+            return this;
+        }
+
+        public Builder withNetwork(final Network network) {
+            this.networks.add(network);
+            return this;
+        }
+
+        public Builder withTags(final Map<String, String> tags) {
+            this.tags.putAll(tags.entrySet().stream().collect(Collectors.toMap(e -> "tag." + e.getKey(), Map.Entry::getValue)));
             return this;
         }
     }

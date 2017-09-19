@@ -16,9 +16,11 @@ import java.util.Date;
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ClientRequestFilter {
     private final KeyPair keyPair;
+    private final String keyId;
 
-    public AuthenticationFilter(final KeyPair keyPair) {
+    public AuthenticationFilter(final KeyPair keyPair, final String keyId) {
         this.keyPair = keyPair;
+        this.keyId = keyId;
     }
 
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
@@ -51,6 +53,6 @@ public class AuthenticationFilter implements ClientRequestFilter {
             throw new IOException(e);
         }
 
-        headers.add(HttpHeaders.AUTHORIZATION, String.format("Signature keyId=\"%s\",algorithm=\"rsa-sha256\" %s", "/ic_joyent_dev/keys/joyent-test", s));
+        headers.add(HttpHeaders.AUTHORIZATION, String.format("Signature keyId=\"%s\",algorithm=\"rsa-sha256\" %s", "/ic_joyent_dev/keys/" + keyId, s));
     }
 }
