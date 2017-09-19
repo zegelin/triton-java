@@ -53,19 +53,24 @@ public class TritonClient implements Triton {
         }
     }
 
-    public TritonClient(final KeyPair keyPair) {
+    public TritonClient(final KeyPair keyPair, final String apiEndpointUrl, final String keyId) {
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.connectorProvider(new GrizzlyConnectorProvider());
         clientConfig.register(new LoggingFeature(null, Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
 
         final Client client = ClientBuilder.newClient(clientConfig);
 
-        apiEndpoint = client.target("https://us-east-1.api.joyent.com/my");
+        apiEndpoint = client.target(apiEndpointUrl);
 
         apiEndpoint.register(ObjectMapperProvider.class);
         apiEndpoint.register(APIVersionFilter.class);
         apiEndpoint.register(RequestDateFilter.class);
-        apiEndpoint.register(new AuthenticationFilter(keyPair));
+        apiEndpoint.register(new AuthenticationFilter(keyPair, keyId));
+    }
+
+    //Convenience method for Joyent public cloud
+    public TritonClient(final KeyPair keyPair, final String keyID) {
+        this(keyPair, "https://us-east-1.api.joyent.com/my", keyID);
     }
 
     @Override
