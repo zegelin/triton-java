@@ -8,7 +8,7 @@ public class Login<T> {
         this.username = username;
     }
 
-    static <T> Login<T> forUsername(final String username) {
+    public static <T> Login<T> forUsername(final String username) {
         return new Login<T>(username);
     }
 }

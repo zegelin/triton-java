@@ -72,7 +72,7 @@ public class Machine extends Id<Machine> {
         private Action() {}
     }
 
-    enum State {
+    public enum State {
         PROVISIONING,
         RUNNING,
         STOPPING,
