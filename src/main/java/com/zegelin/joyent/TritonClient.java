@@ -98,8 +98,6 @@ public class TritonClient implements Triton {
         fwRulesTarget = apiRootTarget.path("/fwrules");
 //        fabricsTarget = apiRootTarget.path("/fabrics/default/");
         networksTarget = apiRootTarget.path("/networks");
-
-
     }
 
     private WebTarget packageTarget(final IdOrName<Package> packageIdOrName) {

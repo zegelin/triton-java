@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Image extends Id<Image> {
     public final String name;
     public final String os;

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
 import com.google.common.base.Preconditions;
-import com.zegelin.joyent.CreateMachineRequest;
 
 import java.io.IOException;
 import java.util.Map;

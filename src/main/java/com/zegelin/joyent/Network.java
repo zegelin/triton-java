@@ -2,6 +2,7 @@ package com.zegelin.joyent;
 
 import java.util.UUID;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Network extends Id<Network> {
     Network(final UUID id) {
         super(id);

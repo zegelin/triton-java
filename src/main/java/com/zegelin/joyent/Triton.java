@@ -3,6 +3,7 @@ package com.zegelin.joyent;
 import java.util.List;
 import java.util.concurrent.Future;
 
+@SuppressWarnings("unused")
 public interface Triton {
     Future<Account> account();
 
@@ -21,7 +22,4 @@ public interface Triton {
     Future<Void> rebootMachine(final Id<Machine> machineId);
     Future<Void> resizeMachine(final Id<Machine> machineId, final IdOrName<Package> newPackage);
     Future<Void> renameMachine(final Id<Machine> machineId, final String newName);
-
-
-
 }

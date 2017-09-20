@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Machine extends Id<Machine> {
     public final String name;
     public final String type;

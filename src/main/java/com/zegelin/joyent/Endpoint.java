@@ -3,6 +3,7 @@ package com.zegelin.joyent;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@SuppressWarnings("WeakerAccess")
 public class Endpoint {
     public static final class Joyent {
         public static Endpoint US_EAST_1 = new Endpoint(URI.create("https://us-east-1.api.joyent.com"));

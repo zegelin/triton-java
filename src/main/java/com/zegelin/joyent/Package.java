@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Package extends Id<Package> {
     public final String name;
     public final Number memory;

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class CreateMachineRequest {
     public static class Locality {
         public final boolean strict;
@@ -91,6 +92,9 @@ public class CreateMachineRequest {
 
             public final ImmutableList.Builder<Id<Machine>> near = ImmutableList.builder();
             public final ImmutableList.Builder<Id<Machine>> far = ImmutableList.builder();
+
+            Builder() {
+            }
 
             public Builder strict() {
                 this.strict = true;
@@ -174,6 +178,8 @@ public class CreateMachineRequest {
         this.firewallEnabled = builder.firewallEnabled;
     }
 
+
+
     public static class Builder {
         private final TritonClient tritonClient;
 
@@ -190,7 +196,7 @@ public class CreateMachineRequest {
 
         public boolean firewallEnabled = false;
 
-        public Builder(final TritonClient tritonClient, final IdOrName<Package> pkg, final IdOrName<Image> image) {
+        Builder(final TritonClient tritonClient, final IdOrName<Package> pkg, final IdOrName<Image> image) {
             this.tritonClient = tritonClient;
             this.pkg = pkg;
             this.image = image;
