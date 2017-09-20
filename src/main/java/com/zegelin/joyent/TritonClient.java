@@ -11,9 +11,9 @@ import com.zegelin.joyent.filter.RequestDateFilter;
 import com.zegelin.joyent.serializer.IdOrNameSerializer;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.logging.LoggingFeature;
 
-import javax.crypto.NoSuchPaddingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -21,16 +21,25 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
-import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 public class TritonClient implements Triton {
-    private final WebTarget apiEndpoint;
+    private final WebTarget packagesTarget;
+    private final WebTarget imagesTarget;
+    private final WebTarget machinesTarget;
+    private final WebTarget keysTarget;
+    private final WebTarget usersTarget;
+    private final WebTarget rolesTarget;
+    private final WebTarget policiesTarget;
+    private final WebTarget configTarget;
+    private final WebTarget datacentersTarget;
+    private final WebTarget servicesTarget;
+    private final WebTarget analyticsTarget;
+    private final WebTarget fwRulesTarget;
+    private final WebTarget networksTarget;
 
     static class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
         final ObjectMapper objectMapper;
@@ -53,61 +62,115 @@ public class TritonClient implements Triton {
         }
     }
 
-    public TritonClient(final KeyPair keyPair) {
-        final ClientConfig clientConfig = new ClientConfig();
+    public TritonClient(final Endpoint endpoint, final Login<Account> accountLogin, final KeyPair keyPair) {
+        final ClientConfig clientConfig = new ClientConfig(); // TODO: expose this to clients, so they can select the HTTP connector, etc
         clientConfig.connectorProvider(new GrizzlyConnectorProvider());
-        clientConfig.register(new LoggingFeature(null, Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
+        clientConfig.register(new LoggingFeature(null, Level.CONFIG, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
 
         final Client client = ClientBuilder.newClient(clientConfig);
 
-        apiEndpoint = client.target("https://us-east-1.api.joyent.com/my");
+        client.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(keyPair).to(KeyPair.class);
+                bind(accountLogin).to(new GenericType<Login<Account>>() {});
+            }
+        });
 
-        apiEndpoint.register(ObjectMapperProvider.class);
-        apiEndpoint.register(APIVersionFilter.class);
-        apiEndpoint.register(RequestDateFilter.class);
-        apiEndpoint.register(new AuthenticationFilter(keyPair));
+        client.register(ObjectMapperProvider.class);
+        client.register(APIVersionFilter.class);
+        client.register(RequestDateFilter.class);
+        client.register(AuthenticationFilter.class);
+
+        final WebTarget apiRootTarget = client.target(endpoint.uri).path(accountLogin.username);
+
+        packagesTarget = apiRootTarget.path("/packages");
+        imagesTarget = apiRootTarget.path("/images");
+        machinesTarget = apiRootTarget.path("/machines");
+        keysTarget = apiRootTarget.path("/keys");
+        usersTarget = apiRootTarget.path("/users");
+        rolesTarget = apiRootTarget.path("/roles");
+        policiesTarget = apiRootTarget.path("/policies");
+        configTarget = apiRootTarget.path("/config");
+        datacentersTarget = apiRootTarget.path("/datacenters");
+        servicesTarget = apiRootTarget.path("/services");
+        analyticsTarget = apiRootTarget.path("/analytics");
+        fwRulesTarget = apiRootTarget.path("/fwrules");
+//        fabricsTarget = apiRootTarget.path("/fabrics/default/");
+        networksTarget = apiRootTarget.path("/networks");
+
+
+    }
+
+    private WebTarget packageTarget(final IdOrName<Package> packageIdOrName) {
+        return packagesTarget.path("/{id}")
+                .resolveTemplate("id", packageIdOrName.idOrName());
+    }
+
+    private WebTarget imageTarget(final Id<Image> imageId) {
+        return imagesTarget.path("/{id}")
+                .resolveTemplate("id", imageId.id);
+    }
+
+    private WebTarget machineTarget(final Id<Machine> machineId) {
+        return machinesTarget.path("/{id}")
+                .resolveTemplate("id", machineId.id);
+    }
+
+
+    @Override
+    public Future<Account> account() {
+        throw new IllegalStateException();
     }
 
     @Override
     public Future<List<Package>> packages() {
-        return apiEndpoint.path("/packages")
+        return packagesTarget
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
                 .get(new GenericType<List<Package>>() {});
     }
 
     @Override
-    public Future<Package> getPackage(final IdOrName<Package> packageIdOrName) {
-        return apiEndpoint.path("/packages/{id}")
-                .resolveTemplate("id", packageIdOrName.idOrName())
+    public Future<Package> packageWithIdOrName(final IdOrName<Package> packageIdOrName) {
+        return packageTarget(packageIdOrName)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
                 .get(Package.class);
     }
 
+
     @Override
     public Future<List<Image>> images() {
-        return apiEndpoint.path("/images")
+        return imagesTarget
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
                 .get(new GenericType<List<Image>>() {});
     }
 
     @Override
-    public Future<Image> getImage(final Id<Image> imageId) {
-        return apiEndpoint.path("/images/{id}")
-                .resolveTemplate("id", imageId.id)
+    public Future<Image> imageForId(final Id<Image> imageId) {
+        return imageTarget(imageId)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
                 .get(Image.class);
     }
 
+
     @Override
     public Future<List<Machine>> machines() {
-        return apiEndpoint.path("/machines")
+        return machinesTarget
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
                 .get(new GenericType<List<Machine>>() {});
+    }
+
+    @Override
+    public Future<Machine> machineWithId(final Id<Machine> machineId) {
+        return machineTarget(machineId)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .async()
+                .get(Machine.class);
     }
 
     @Override
@@ -116,18 +179,57 @@ public class TritonClient implements Triton {
     }
 
     Future<Machine> createMachine(final CreateMachineRequest request) {
-        return apiEndpoint.path("/machines")
+        return machinesTarget
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
-                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE), Machine.class);
+                .post(Entity.json(request), Machine.class);
     }
 
     @Override
-    public Future<Machine> machineWithId(final Id<Machine> machineId) {
-        return apiEndpoint.path("/machines/{id}")
-                .resolveTemplate("id", machineId.id)
+    public Future<Void> deleteMachine(final Id<Machine> machineId) {
+        return machineTarget(machineId)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .async()
-                .get(Machine.class);
+                .delete(Void.class);
+    }
+
+    @Override
+    public Future<Void> stopMachine(final Id<Machine> machineId) {
+        return machineTarget(machineId)
+                .request()
+                .async()
+                .post(Machine.Action.stop(), Void.class);
+    }
+
+    @Override
+    public Future<Void> startMachine(final Id<Machine> machineId) {
+        return machineTarget(machineId)
+                .request()
+                .async()
+                .post(Machine.Action.start(), Void.class);
+    }
+
+    @Override
+    public Future<Void> rebootMachine(final Id<Machine> machineId) {
+        return machineTarget(machineId)
+                .request()
+                .async()
+                .post(Machine.Action.reboot(), Void.class);
+    }
+
+    @Override
+    public Future<Void> resizeMachine(final Id<Machine> machineId, final IdOrName<Package> newPackage) {
+        return machineTarget(machineId)
+                .request()
+                .async()
+                .post(Machine.Action.resize(newPackage), Void.class);
+    }
+
+    @Override
+    public Future<Void> renameMachine(final Id<Machine> machineId, final String newName) {
+        return machineTarget(machineId)
+                .request()
+                .async()
+                .post(Machine.Action.rename(newName), Void.class);
     }
 }
