@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 public class TritonClient implements Triton {
+    private final WebTarget accountTarget;
     private final WebTarget packagesTarget;
     private final WebTarget imagesTarget;
     private final WebTarget machinesTarget;
@@ -65,7 +66,7 @@ public class TritonClient implements Triton {
     public TritonClient(final Endpoint endpoint, final Login<Account> accountLogin, final KeyPair keyPair) {
         final ClientConfig clientConfig = new ClientConfig(); // TODO: expose this to clients, so they can select the HTTP connector, etc
         clientConfig.connectorProvider(new GrizzlyConnectorProvider());
-        clientConfig.register(new LoggingFeature(null, Level.CONFIG, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
+        clientConfig.register(new LoggingFeature(null, Level.FINEST, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
 
         final Client client = ClientBuilder.newClient(clientConfig);
 
@@ -84,6 +85,7 @@ public class TritonClient implements Triton {
 
         final WebTarget apiRootTarget = client.target(endpoint.uri).path(accountLogin.username);
 
+        accountTarget = apiRootTarget;
         packagesTarget = apiRootTarget.path("/packages");
         imagesTarget = apiRootTarget.path("/images");
         machinesTarget = apiRootTarget.path("/machines");
@@ -118,7 +120,10 @@ public class TritonClient implements Triton {
 
     @Override
     public Future<Account> account() {
-        throw new IllegalStateException();
+        return accountTarget
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .async()
+                .get(Account.class);
     }
 
     @Override

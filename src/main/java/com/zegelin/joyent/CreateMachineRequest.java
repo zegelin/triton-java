@@ -6,12 +6,10 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.zegelin.joyent.serializer.UnwrappingMapSerializer;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Future;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
@@ -19,13 +17,13 @@ public class CreateMachineRequest {
     public static class Locality {
         public final boolean strict;
 
-        public final List<Id<Machine>> near;
-        public final List<Id<Machine>> far;
+        public final Set<Id<Machine>> near;
+        public final Set<Id<Machine>> far;
 
-        Locality(final boolean strict, final Collection<? extends Id<Machine>> near, final Collection<? extends Id<Machine>> far) {
+        Locality(final boolean strict, final Iterable<? extends Id<Machine>> near, final Iterable<? extends Id<Machine>> far) {
             this.strict = strict;
-            this.near = ImmutableList.copyOf(near);
-            this.far = ImmutableList.copyOf(far);
+            this.near = ImmutableSet.copyOf(near);
+            this.far = ImmutableSet.copyOf(far);
         }
 
         Locality(final Builder builder) {
@@ -53,7 +51,7 @@ public class CreateMachineRequest {
             return strictlyNearTo(ImmutableList.copyOf(machines));
         }
 
-        public static Locality strictlyNearTo(final List<Id<Machine>> machines) {
+        public static Locality strictlyNearTo(final Iterable<? extends Id<Machine>> machines) {
             return new Locality(true, machines, ImmutableList.of());
         }
 
@@ -78,7 +76,7 @@ public class CreateMachineRequest {
             return strictlyFarFrom(ImmutableList.copyOf(machines));
         }
 
-        public static Locality strictlyFarFrom(final List<Id<Machine>> machines) {
+        public static Locality strictlyFarFrom(final Iterable<? extends Id<Machine>> machines) {
             return new Locality(true, ImmutableList.of(), machines);
         }
 
@@ -87,11 +85,11 @@ public class CreateMachineRequest {
             return new Builder();
         }
 
-        static class Builder {
+        public static class Builder {
             public boolean strict;
 
-            public final ImmutableList.Builder<Id<Machine>> near = ImmutableList.builder();
-            public final ImmutableList.Builder<Id<Machine>> far = ImmutableList.builder();
+            public final ImmutableSet.Builder<Id<Machine>> near = ImmutableSet.builder();
+            public final ImmutableSet.Builder<Id<Machine>> far = ImmutableSet.builder();
 
             Builder() {
             }
@@ -111,7 +109,7 @@ public class CreateMachineRequest {
                 return this;
             }
 
-            public Builder nearTo(final Iterable<Id<Machine>> machines) {
+            public Builder nearTo(final Iterable<? extends Id<Machine>> machines) {
                 near.addAll(machines);
                 return this;
             }
@@ -127,7 +125,7 @@ public class CreateMachineRequest {
                 return this;
             }
 
-            public Builder farFrom(final Iterable<Id<Machine>> machines) {
+            public Builder farFrom(final Iterable<? extends Id<Machine>> machines) {
                 far.addAll(machines);
                 return this;
             }
@@ -161,7 +159,7 @@ public class CreateMachineRequest {
     public final Map<String, String> metadata;
 
     @JsonSerialize(using = UnwrappingMapSerializer.class)
-    @JsonUnwrapped(prefix = "tags.")
+    @JsonUnwrapped(prefix = "tag.")
     public final Map<String, String> tags;
 
     @JsonProperty
@@ -171,7 +169,7 @@ public class CreateMachineRequest {
         this.name = builder.name;
         this.pkg = builder.pkg;
         this.image = builder.image;
-        this.networks = ImmutableList.of();
+        this.networks = builder.networks.build();
         this.locality = builder.locality;
         this.metadata = builder.metadata.build();
         this.tags = builder.tags.build();
