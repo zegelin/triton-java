@@ -64,7 +64,7 @@ public class CreateMachineRequest {
             return farFrom(ImmutableList.copyOf(machines));
         }
 
-        public static Locality farFrom(final List<Id<Machine>> machines) {
+        public static Locality farFrom(final List<? extends Id<Machine>> machines) {
             return new Locality(false, ImmutableList.of(), machines);
         }
 
@@ -225,12 +225,12 @@ public class CreateMachineRequest {
             return this;
         }
 
-        public Builder withNetworks(final Iterable<Id<Network>> networkIds) {
+        public Builder withNetworks(final Iterable<? extends Id<Network>> networkIds) {
             this.networks.addAll(networkIds);
             return this;
         }
 
-        public Builder withNetworks(final Iterator<Id<Network>> networkIds) {
+        public Builder withNetworks(final Iterator<? extends Id<Network>> networkIds) {
             this.networks.addAll(networkIds);
             return this;
         }

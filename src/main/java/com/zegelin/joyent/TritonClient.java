@@ -23,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
@@ -66,7 +67,7 @@ public class TritonClient implements Triton {
     public TritonClient(final Endpoint endpoint, final Login<Account> accountLogin, final KeyPair keyPair) {
         final ClientConfig clientConfig = new ClientConfig(); // TODO: expose this to clients, so they can select the HTTP connector, etc
         clientConfig.connectorProvider(new GrizzlyConnectorProvider());
-        clientConfig.register(new LoggingFeature(null, Level.FINEST, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
+        clientConfig.register(new LoggingFeature(null, Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 1024 * 1024));
 
         final Client client = ClientBuilder.newClient(clientConfig);
 
@@ -159,6 +160,19 @@ public class TritonClient implements Triton {
                 .get(Image.class);
     }
 
+    @Override
+    public CreateImageFromMachineRequest.Builder createImageFromMachine(final Id<Machine> machine, final String name, final String version) {
+        return new CreateImageFromMachineRequest.Builder(this, machine, name, version);
+    }
+
+    Future<Image> createImageFromMachine(final CreateImageFromMachineRequest request) {
+        return imagesTarget
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .async()
+                .post(Entity.json(request), Image.class);
+    }
+
+
 
     @Override
     public Future<List<Machine>> machines() {
@@ -167,6 +181,7 @@ public class TritonClient implements Triton {
                 .async()
                 .get(new GenericType<List<Machine>>() {});
     }
+
 
     @Override
     public Future<Machine> machineWithId(final Id<Machine> machineId) {
@@ -234,5 +249,22 @@ public class TritonClient implements Triton {
                 .request()
                 .async()
                 .post(Machine.Action.rename(newName), Void.class);
+    }
+
+    @Override
+    public Future<Void> replaceMachineTags(final Id<Machine> machineId, final Map<String, String> tags) {
+        return machineTarget(machineId)
+                .path("/tags")
+                .request()
+                .async()
+                .put(Entity.json(tags), Void.class);
+    }
+
+    @Override
+    public Future<List<Network>> networks() {
+        return networksTarget
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .async()
+                .get(new GenericType<List<Network>>() {});
     }
 }
